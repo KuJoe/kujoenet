@@ -1,2 +1,2 @@
 # kujoenet
-A repo for KuJoe.net
+A repo for [KuJoe.net](https://KuJoe.net)
