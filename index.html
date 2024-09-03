@@ -141,17 +141,18 @@ http://www.templatemo.com/preview/337_rosey_pixel
 			type: "GET",
 			dataType: "xml",
 			success: function(data) {
-				var items = $(data).find("item");
+				var item = $(data).find("item:first");
 
-				$.each(items, function(index, item) {
-					var title = $(item).find("title").text();
-					var link = $(item).find("link").text();
-					var description = $(item).find("description").text(); 
-
+				if (item.length > 0) {
+					var title = item.find("title").text();
+					var link = item.find("link").text();
+					var description = item.find("description").text();
 
 					var itemHTML = "<div class='feed-item'><h3>" + title + "</h3><p>" + description + "</p><a href='" + link + "'>Read more</a></div>";
 					$("#feedContainer").append(itemHTML);
-				});
+				} else {
+					console.log("No items found in the RSS feed.");
+				}
 			},
 			error: function(error) {
 				console.error("Error fetching RSS feed:", error);
