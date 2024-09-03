@@ -42,6 +42,7 @@ http://www.templatemo.com/preview/337_rosey_pixel
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 </head>
 <body>
@@ -108,15 +109,56 @@ http://www.templatemo.com/preview/337_rosey_pixel
             <a class="gototop" href="#top"></a>
             <div class="cleaner"></div>
         </div> <!-- end of a content box -->
+		
+        <div id="blog"></div>
+        <div class="content_box">
+            <h2>Latest Blog Post</h2>
+            <div class="cleaner"></div>
+			<div class="col_w720">
+				<div class="socials_box">
+					    <div id="feedContainer"></div>
+				</div>
+			</div>
+            <div class="cleaner h30"></div>
+            <a class="gototop" href="#top"></a>
+            <div class="cleaner"></div>
+        </div> <!-- end of a content box -->
         
 	</div> <!-- end of main -->
     
     <div id="footer">
-        Copyright © 2022 <a href="https://mindly.social/web/@KuJoe">KuJoe</a> | All Rights Reserved
+        © <a rel="me" href="https://mindly.social/@KuJoe">KuJoe</a>
         <div class="cleaner"></div>
 	</div>
     
 </div> <!-- end of wrapper -->
+<script>
+	$(document).ready(function() {
+		var feedURL = "https://blog.kujoe.net/feed/rss";
+
+		$.ajax({
+			url: feedURL,
+			type: "GET",
+			dataType: "xml",
+			success: function(data) {
+				var items = $(data).find("item");
+
+				$.each(items, function(index, item) {
+					var title = $(item).find("title").text();
+					var link = $(item).find("link").text();
+					var description = $(item).find("description").text(); 
+
+
+					var itemHTML = "<div class='feed-item'><h3>" + title + "</h3><p>" + description + "</p><a href='" + link + "'>Read more</a></div>";
+					$("#feedContainer").append(itemHTML);
+				});
+			},
+			error: function(error) {
+				console.error("Error fetching RSS feed:", error);
+			}
+		});
+	});
+</script>
 <script type="text/javascript">
 	document.write('<img src="https://chilistats.kujoe.net/counter.php?ref=' + escape(document.referrer) + '" border="0">')
 </script>
