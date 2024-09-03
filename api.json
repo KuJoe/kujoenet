@@ -1,7 +1,0 @@
-{
-  "cors": {
-    "allowedOrigins": [
-      "https://blog.kujoe.net"
-    ]
-  }
-}
