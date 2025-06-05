@@ -28,7 +28,6 @@
             position: relative; /* For absolute positioning of UI elements */
             touch-action: none; /* Prevent default touch actions like scrolling/zooming */
         }
-        /* The #retro-background div and its CSS are removed as it's now handled in Three.js */
 
         canvas {
             display: block;
@@ -69,104 +68,8 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Control Panel UI */
-        #control-panel {
-            position: relative; /* Relative to body for z-index */
-            z-index: 10; /* Ensure UI is above canvas */
-            background-color: rgba(30, 30, 50, 0.8); /* Semi-transparent background */
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            display: grid; /* Use grid for button layout */
-            grid-template-columns: repeat(2, 1fr); /* 2 columns */
-            gap: 15px;
-            max-width: 400px; /* Smaller max width for fewer buttons */
-            width: 90%; /* Responsive width */
-            margin-top: auto; /* Push to bottom for desktop, center for mobile */
-            margin-bottom: 20px;
-            backdrop-filter: blur(5px); /* Frosted glass effect */
-            -webkit-backdrop-filter: blur(5px); /* Safari support */
-        }
-
-        .control-button {
-            padding: 12px 15px;
-            background-color: #6a0dad; /* Purple button */
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.0em;
-            font-weight: bold;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .control-button:hover {
-            background-color: #8a2be2; /* Lighter purple on hover */
-            transform: translateY(-2px);
-        }
-
-        .control-button:active {
-            background-color: #5a0a9d;
-            transform: translateY(0);
-        }
-
-        #randomActionButton {
-            grid-column: span 2; /* Spans all columns */
-            background-color: #28a745; /* Green for random action */
-        }
-
-        #randomActionButton:hover {
-            background-color: #218838;
-        }
-
-        #randomActionButton:active {
-            background-color: #1e7e34;
-        }
-
-        #resetButton { /* Re-added reset button */
-            grid-column: 1 / -1; /* Make reset button span ALL columns */
-            background-color: #dc3545; /* Red for reset */
-            text-align: center; /* Center its text */
-        }
-
-        #resetButton:hover {
-            background-color: #e65a6a;
-        }
-
-        #resetButton:active {
-            background-color: #c82333;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            #control-panel {
-                grid-template-columns: repeat(2, 1fr);
-                margin-top: auto;
-                margin-bottom: 15px;
-                width: 95%;
-                padding: 15px;
-                gap: 10px;
-            }
-            #randomActionButton, #resetButton { /* Both span 2 columns */
-                grid-column: span 2;
-            }
-            .control-button {
-                font-size: 0.9em;
-                padding: 10px 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #control-panel {
-                grid-template-columns: 1fr; /* 1 column on very small screens */
-                margin-bottom: 10px;
-            }
-            #randomActionButton, #resetButton { /* Both span 1 column */
-                grid-column: span 1;
-            }
-        }
+        /* Control Panel UI - Removed */
+        /* All .control-button, #randomActionButton, #resetButton styles are removed */
     </style>
 </head>
 <body>
@@ -176,10 +79,7 @@
     </div>
     <canvas id="avatarCanvas"></canvas>
 
-    <div id="control-panel">
-        <button class="control-button" id="randomActionButton">Random Action!</button>
-        <button class="control-button" id="resetButton">Reset View</button>
-    </div>
+    <!-- Control Panel div and all its buttons are removed -->
 
     <script type="module">
         import * as THREE from 'three';
@@ -202,9 +102,7 @@
 
         const loadingOverlay = document.getElementById('loading-overlay');
 
-        // References to control buttons
-        const randomActionButton = document.getElementById('randomActionButton');
-        const resetButton = document.getElementById('resetButton');
+        // References to control buttons are removed
 
         // --- Mouse/Touch Control Management ---
         let isDragging = false; // Flag for mouse/touch manipulation (pull, pinch, squish)
@@ -213,7 +111,7 @@
         let initialModelScaleOnDrag = new THREE.Vector3();
 
         let mouseControlEnabled = true; // Flag for regular mouse/touch-based rotation
-        let activeButtonTweenCount = 0; // Tracks how many button-triggered tweens are active
+        // activeButtonTweenCount and its usage related to buttons is removed
 
         // --- Idle Movement Variables ---
         let idleTargetPosition = new THREE.Vector3().copy(initialAvatarPosition);
@@ -336,8 +234,7 @@
             window.addEventListener('touchend', onWindowTouchEnd); // Listen on window to catch release outside canvas
             window.addEventListener('touchmove', onCanvasTouchMove, { passive: false });
 
-            randomActionButton.addEventListener('click', triggerRandomAction);
-            resetButton.addEventListener('click', resetView);
+            // Button event listeners are removed
 
             animate();
         }
@@ -368,7 +265,7 @@
             TWEEN.removeAll();
             mouseControlEnabled = false;
             isDragging = true;
-            activeButtonTweenCount = 0;
+            // activeButtonTweenCount and its usage related to buttons is removed
 
             dragStartPosition.x = event.clientX;
             dragStartPosition.y = event.clientY;
@@ -445,7 +342,7 @@
                 TWEEN.removeAll();
                 mouseControlEnabled = false;
                 isDragging = true; // Use isDragging for touch scale too
-                activeButtonTweenCount = 0;
+                // activeButtonTweenCount and its usage related to buttons is removed
 
                 // Store initial positions for calculating distance/angle for pinch/squish/stretch
                 dragStartPosition.x = (event.touches[0].clientX + event.touches[1].clientX) / 2;
@@ -488,10 +385,10 @@
                 const newTouchAngle = getTouchAngle(event.touches);
 
                 const pinchDelta = newTouchDistance - currentTouchDistance;
-                const twistDelta = newTouchAngle - currentTouchAngle; // Could use this for Z-rotation
+                // const twistDelta = newTouchAngle - currentTouchAngle; // Could use this for Z-rotation
 
                 const scaleSensitivity = 0.005 * (initialAvatarScale.x / 3.75); // Adjusted for touch
-                const rotationSensitivity = 0.01; // For twist
+                // const rotationSensitivity = 0.01; // For twist
 
                 // Pinch/Zoom (uniform scale) based on distance change
                 const scaleFactor = 1 + pinchDelta * scaleSensitivity;
@@ -555,7 +452,9 @@
         }
 
 
-        // --- Avatar Animation Functions (for Random Action button) ---
+        // --- Avatar Animation Functions (used by idle or if a random action button were present) ---
+        // These functions are now only called internally by idle movement
+        // or if you re-add a 'Random Action!' button.
         function triggerAvatarAnimation(type) {
             if (!avatarHead) return;
 
@@ -563,7 +462,7 @@
             TWEEN.removeAll();
             mouseControlEnabled = false;
             isDragging = false;
-            activeButtonTweenCount = 0;
+            // activeButtonTweenCount and its usage related to buttons is removed
 
             const animationDuration = 250;
             const resetDuration = 600;
@@ -653,7 +552,7 @@
                     .easing(TWEEN.Easing.Quadratic.Out)
                     .chain(
                         new TWEEN.Tween(avatarHead.position)
-                            .to(initialAvatarPosition, resetDuration)
+                            .to(initialAvatarPosition, resetDuration) // Always return to initial position
                             .easing(TWEEN.Easing.Elastic.Out)
                     );
                 tweensToRun.push(posTween);
@@ -665,7 +564,7 @@
                     .easing(TWEEN.Easing.Quadratic.Out)
                     .chain(
                         new TWEEN.Tween(avatarHead.rotation)
-                            .to(initialAvatarRotation, resetDuration)
+                            .to(initialAvatarRotation, resetDuration) // Always return to initial rotation
                             .easing(TWEEN.Easing.Elastic.Out)
                     );
                 tweensToRun.push(rotTween);
@@ -684,29 +583,48 @@
             }
 
             if (tweensToRun.length > 0) {
-                activeButtonTweenCount = tweensToRun.length;
+                // activeButtonTweenCount and its usage related to buttons is removed
+                // Re-enable mouse control directly after the tweens complete.
+                // This logic is now simpler as buttons are removed.
+                const lastTween = tweensToRun[tweensToRun.length - 1]; // Get the last tween in the chain
+                if (lastTween && lastTween.onCompleteCallback) { // Check if it's a valid tween with a callback
+                    const originalOnComplete = lastTween.onCompleteCallback;
+                    lastTween.onComplete(() => {
+                        originalOnComplete(); // Call original if exists
+                        mouseControlEnabled = true;
+                        targetRotationX = avatarHead.rotation.x;
+                        targetRotationY = avatarHead.rotation.y;
+                        setNewIdleTargets();
+                    });
+                } else if (tweensToRun.length === 1) { // If only one tween and no explicit chain
+                     tweensToRun[0].onComplete(() => {
+                        mouseControlEnabled = true;
+                        targetRotationX = avatarHead.rotation.x;
+                        targetRotationY = avatarHead.rotation.y;
+                        setNewIdleTargets();
+                    });
+                } else { // Fallback for cases where tween chaining might be complex or unexpected
+                    // Set a timeout to re-enable mouse control
+                    setTimeout(() => {
+                        mouseControlEnabled = true;
+                        targetRotationX = avatarHead.rotation.x;
+                        targetRotationY = avatarHead.rotation.y;
+                        setNewIdleTargets();
+                    }, animationDuration + resetDuration + 100); // Wait for animations to finish
+                }
 
-                tweensToRun.forEach(tween => {
-                    tween.onComplete(() => {
-                        activeButtonTweenCount--;
-                        if (activeButtonTweenCount === 0) {
-                            mouseControlEnabled = true;
-                            targetRotationX = avatarHead.rotation.x;
-                            targetRotationY = avatarHead.rotation.y;
-                            setNewIdleTargets();
-                        }
-                    }).start();
-                });
+                tweensToRun.forEach(tween => tween.start());
             }
         }
 
+        // resetView function is now standalone, no longer triggered by a button
         function resetView() {
             if (!avatarHead) return;
 
             TWEEN.removeAll();
             mouseControlEnabled = true;
             isDragging = false;
-            activeButtonTweenCount = 0;
+            // activeButtonTweenCount and its usage related to buttons is removed
 
             targetRotationX = initialAvatarRotation.x;
             targetRotationY = initialAvatarRotation.y;
@@ -746,7 +664,7 @@
             lastIdleTargetChangeTime = performance.now();
         }
 
-        // --- Random Action Selector ---
+        // Random Action Selector - now only for internal use if you decide to re-add a "Random Action" trigger later
         const randomActionTypes = [
             'pullLeft', 'pullRight', 'pullUp', 'pullDown',
             'squish', 'stretch',
@@ -755,6 +673,8 @@
             'randomTwist'
         ];
 
+        // This function is no longer triggered by a button directly.
+        // It's kept here if you want to call it programmatically or re-add a button later.
         function triggerRandomAction() {
             const randomIndex = Math.floor(Math.random() * randomActionTypes.length);
             const randomType = randomActionTypes[randomIndex];
@@ -770,6 +690,7 @@
 
             const currentTime = performance.now();
 
+            // Apply idle movement only if mouse control is enabled and not dragging
             if (avatarHead && mouseControlEnabled && !isDragging) {
                 avatarHead.position.lerp(idleTargetPosition, 0.01);
                 avatarHead.rotation.x = THREE.MathUtils.lerp(avatarHead.rotation.x, idleTargetRotation.x, 0.01);
@@ -780,6 +701,8 @@
                     setNewIdleTargets();
                 }
             }
+            // Regular mouse-based rotation (still uses targetRotationX/Y)
+            // This happens even when idle movement is on, allowing mouse to override idle
             if (avatarHead && mouseControlEnabled && !isDragging) {
                 avatarHead.rotation.x += (targetRotationX - avatarHead.rotation.x) * rotationSmoothness;
                 avatarHead.rotation.y += (targetRotationY - avatarHead.rotation.y) * rotationSmoothness;
