@@ -281,7 +281,7 @@
                     const backgroundMaterial = new THREE.MeshBasicMaterial({
                         map: texture,
                         transparent: true,
-                        opacity: 0.2 // Keep subtle opacity
+                        opacity: 1.0 // Increased opacity to 1.0
                     });
 
                     const backgroundGeometry = new THREE.PlaneGeometry(1000, 1000); // Large plane
@@ -296,7 +296,7 @@
             );
 
             // --- Load 3D Model ---
-            const gltfLoader = new GLTFLoader(); // Renamed to gltfLoader to avoid conflict with textureLoader
+            const gltfLoader = new GLTFLoader(); // Corrected: GLTFLoader is imported directly
             gltfLoader.load(
                 'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb', // Placeholder model
                 function (gltf) {
