@@ -28,19 +28,7 @@
             position: relative; /* For absolute positioning of UI elements */
             touch-action: none; /* Prevent default touch actions like scrolling/zooming */
         }
-        #retro-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0; /* Behind canvas */
-            /* Custom "Super64" tiled image background using direct URL */
-            background-image: url("https://a.cdn9000.com/3QENAwF1jgbvy405/super64.png");
-            background-repeat: repeat;
-            background-size: 64px 64px; /* Size of each tile */
-            opacity: 0.2; /* Subtle opacity */
-        }
+        /* The #retro-background div and its CSS are removed as it's now handled in Three.js */
 
         canvas {
             display: block;
@@ -182,7 +170,6 @@
     </style>
 </head>
 <body>
-    <div id="retro-background"></div>
     <div id="loading-overlay">
         <div class="spinner"></div>
         Loading Avatar...
@@ -217,7 +204,7 @@
 
         // References to control buttons
         const randomActionButton = document.getElementById('randomActionButton');
-        const resetButton = document.getElementById('resetButton'); // Re-added
+        const resetButton = document.getElementById('resetButton');
 
         // --- Mouse Control Management ---
         let isDragging = false; // Flag for mouse manipulation (pull, pinch, squish)
@@ -240,7 +227,7 @@
         function init() {
             // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a2e);
+            scene.background = null; // Set scene background to null to allow custom background plane to show
 
             // Camera setup
             camera = new THREE.PerspectiveCamera(
@@ -278,9 +265,39 @@
             directionalLight.shadow.camera.top = 5;
             directionalLight.shadow.camera.bottom = -5;
 
+            // --- Create 3D Background Plane with Image Texture ---
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                "https://a.cdn9000.com/3QENAwF1jgbvy405/super64.png", // The provided image URL
+                function(texture) {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    // Adjust repeat based on the plane size and desired tile density
+                    // A 64x64 texture on a 1000x1000 plane needs to repeat (1000/64) times
+                    const repeatX = 1000 / 64;
+                    const repeatY = 1000 / 64;
+                    texture.repeat.set(repeatX, repeatY);
+
+                    const backgroundMaterial = new THREE.MeshBasicMaterial({
+                        map: texture,
+                        transparent: true,
+                        opacity: 0.2 // Keep subtle opacity
+                    });
+
+                    const backgroundGeometry = new THREE.PlaneGeometry(1000, 1000); // Large plane
+                    const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+                    backgroundMesh.position.z = -200; // Position far behind the avatar
+                    scene.add(backgroundMesh);
+                },
+                undefined, // Progress callback
+                function(error) {
+                    console.error('An error occurred loading the background texture:', error);
+                }
+            );
+
             // --- Load 3D Model ---
-            const loader = new GLTFLoader();
-            loader.load(
+            const gltfLoader = new GLTFLoader(); // Renamed to gltfLoader to avoid conflict with textureLoader
+            gltfLoader.load(
                 'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb', // Placeholder model
                 function (gltf) {
                     avatarHead = gltf.scene;
