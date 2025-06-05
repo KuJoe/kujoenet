@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Avatar Head</title>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars */
+            display: flex;
+            flex-direction: column; /* Arrange content vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a2e; /* Dark background */
+            font-family: 'Inter', sans-serif; /* Modern font */
+            color: #e0e0e0;
+            position: relative; /* For absolute positioning of UI elements */
+            touch-action: none; /* Prevent default touch actions like scrolling/zooming */
+        }
+        #retro-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0; /* Behind canvas */
+            /* Custom "Super64" tiled image background using direct URL */
+            background-image: url("https://a.cdn9000.com/3QENAwF1jgbvy405/super64.png");
+            background-repeat: repeat;
+            background-size: 64px 64px; /* Size of each tile */
+            opacity: 0.2; /* Subtle opacity */
+        }
+
+        canvas {
+            display: block;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            background-color: transparent; /* Scene background is handled by Three.js */
+            position: absolute; /* Position canvas behind UI */
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5em;
+            z-index: 1000;
+            border-radius: 10px; /* Rounded corners for overlay */
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Control Panel UI */
+        #control-panel {
+            position: relative; /* Relative to body for z-index */
+            z-index: 10; /* Ensure UI is above canvas */
+            background-color: rgba(30, 30, 50, 0.8); /* Semi-transparent background */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: grid; /* Use grid for button layout */
+            grid-template-columns: repeat(2, 1fr); /* 2 columns */
+            gap: 15px;
+            max-width: 400px; /* Smaller max width for fewer buttons */
+            width: 90%; /* Responsive width */
+            margin-top: auto; /* Push to bottom for desktop, center for mobile */
+            margin-bottom: 20px;
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            -webkit-backdrop-filter: blur(5px); /* Safari support */
+        }
+
+        .control-button {
+            padding: 12px 15px;
+            background-color: #6a0dad; /* Purple button */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.0em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .control-button:hover {
+            background-color: #8a2be2; /* Lighter purple on hover */
+            transform: translateY(-2px);
+        }
+
+        .control-button:active {
+            background-color: #5a0a9d;
+            transform: translateY(0);
+        }
+
+        #randomActionButton {
+            grid-column: span 2; /* Spans all columns */
+            background-color: #28a745; /* Green for random action */
+        }
+
+        #randomActionButton:hover {
+            background-color: #218838;
+        }
+
+        #randomActionButton:active {
+            background-color: #1e7e34;
+        }
+
+        #resetButton { /* Re-added reset button */
+            grid-column: 1 / -1; /* Make reset button span ALL columns */
+            background-color: #dc3545; /* Red for reset */
+            text-align: center; /* Center its text */
+        }
+
+        #resetButton:hover {
+            background-color: #e65a6a;
+        }
+
+        #resetButton:active {
+            background-color: #c82333;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #control-panel {
+                grid-template-columns: repeat(2, 1fr);
+                margin-top: auto;
+                margin-bottom: 15px;
+                width: 95%;
+                padding: 15px;
+                gap: 10px;
+            }
+            #randomActionButton, #resetButton { /* Both span 2 columns */
+                grid-column: span 2;
+            }
+            .control-button {
+                font-size: 0.9em;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #control-panel {
+                grid-template-columns: 1fr; /* 1 column on very small screens */
+                margin-bottom: 10px;
+            }
+            #randomActionButton, #resetButton { /* Both span 1 column */
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="retro-background"></div>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        Loading Avatar...
+    </div>
+    <canvas id="avatarCanvas"></canvas>
+
+    <div id="control-panel">
+        <button class="control-button" id="randomActionButton">Random Action!</button>
+        <button class="control-button" id="resetButton">Reset View</button>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import TWEEN from 'three/addons/libs/tween.module.min.js';
+
+        // --- Global Variables ---
+        let scene, camera, renderer;
+        let avatarHead; // This will hold our loaded 3D model
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+        const rotationSmoothness = 0.08; // How quickly the head rotates towards the target (0.0 to 1.0)
+        const maxPitch = Math.PI / 4; // Max up/down rotation (45 degrees)
+        const maxYaw = Math.PI / 3;   // Max left/right rotation (60 degrees)
+
+        // Store initial avatar state for reset functionality
+        const initialAvatarPosition = new THREE.Vector3(0, -6.0, 0); // Model lowered by 20%
+        const initialAvatarScale = new THREE.Vector3(3.75, 3.75, 3.75);
+        const initialAvatarRotation = new THREE.Euler(0, 0, 0);
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // References to control buttons
+        const randomActionButton = document.getElementById('randomActionButton');
+        const resetButton = document.getElementById('resetButton'); // Re-added
+
+        // --- Mouse Control Management ---
+        let isDragging = false; // Flag for mouse manipulation (pull, pinch, squish)
+        let dragStartPosition = { x: 0, y: 0 };
+        let initialModelPositionOnDrag = new THREE.Vector3();
+        let initialModelScaleOnDrag = new THREE.Vector3();
+
+        let mouseControlEnabled = true; // Flag for regular mouse-based rotation
+        let activeButtonTweenCount = 0; // Tracks how many button-triggered tweens are active
+
+        // --- Idle Movement Variables ---
+        let idleTargetPosition = new THREE.Vector3().copy(initialAvatarPosition);
+        let idleTargetRotation = new THREE.Euler().copy(initialAvatarRotation);
+        let lastIdleTargetChangeTime = 0;
+        const idleTargetChangeInterval = 3000; // Change idle target every 3 seconds
+        const idleMovementRangePosition = 2.0; // Increased for more noticeable positional idle movement
+        const idleMovementRangeRotation = Math.PI / 10; // Increased for more noticeable rotational idle movement
+
+        // --- Initialization Function ---
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(
+                75, // Field of view
+                window.innerWidth / window.innerHeight, // Aspect ratio
+                0.1, // Near clipping plane
+                1000 // Far clipping plane
+            );
+            camera.position.z = 30.0;
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({
+                canvas: document.getElementById('avatarCanvas'),
+                antialias: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            directionalLight.position.set(2, 3, 2);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -5;
+            directionalLight.shadow.camera.right = 5;
+            directionalLight.shadow.camera.top = 5;
+            directionalLight.shadow.camera.bottom = -5;
+
+            // --- Load 3D Model ---
+            const loader = new GLTFLoader();
+            loader.load(
+                'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb', // Placeholder model
+                function (gltf) {
+                    avatarHead = gltf.scene;
+                    scene.add(avatarHead);
+
+                    avatarHead.scale.copy(initialAvatarScale);
+                    avatarHead.position.copy(initialAvatarPosition);
+                    avatarHead.rotation.copy(initialAvatarRotation);
+
+                    loadingOverlay.style.display = 'none'; // Hide loading overlay
+
+                    // Set initial idle targets
+                    setNewIdleTargets();
+                },
+                function (xhr) {
+                    const percent = Math.round(xhr.loaded / xhr.total * 100);
+                    loadingOverlay.textContent = `Loading Avatar... ${percent}%`;
+                },
+                function (error) {
+                    console.error('An error occurred loading the GLTF model:', error);
+                    loadingOverlay.textContent = 'Failed to load avatar. Check console for details.';
+                }
+            );
+
+            // --- Event Listeners ---
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('resize', onWindowResize);
+
+            // Mouse manipulation event listeners on the canvas
+            renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
+            window.addEventListener('mouseup', onWindowMouseUp); // Listen on window to catch release outside canvas
+            window.addEventListener('mousemove', onCanvasMouseMove); // Listen on window for continuous drag
+
+            randomActionButton.addEventListener('click', triggerRandomAction);
+            resetButton.addEventListener('click', resetView);
+
+            animate();
+        }
+
+        // --- Event Handlers (for Regular Mouse Rotation) ---
+        function onMouseMove(event) {
+            // Only apply this rotation if not currently dragging for manipulation AND mouse control is enabled
+            if (!isDragging && mouseControlEnabled) {
+                const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                targetRotationY = -mouseX * maxYaw;
+                targetRotationX = -mouseY * maxPitch;
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- New Mouse Manipulation Event Handlers ---
+        function onCanvasMouseDown(event) {
+            if (!avatarHead) return;
+
+            // Stop any ongoing button-triggered tweens and disable regular mouse rotation AND idle movement
+            TWEEN.removeAll();
+            mouseControlEnabled = false; // Disables both regular mouse rotation and idle movement
+            isDragging = true; // Enables direct dragging
+            activeButtonTweenCount = 0; // Reset count as we're starting a new interaction
+
+            dragStartPosition.x = event.clientX;
+            dragStartPosition.y = event.clientY;
+            initialModelPositionOnDrag.copy(avatarHead.position);
+            initialModelScaleOnDrag.copy(avatarHead.scale);
+
+            // Prevent default drag behavior (e.g., image dragging)
+            event.preventDefault();
+        }
+
+        function onCanvasMouseMove(event) {
+            if (!isDragging || !avatarHead) return;
+
+            const deltaX = event.clientX - dragStartPosition.x;
+            const deltaY = event.clientY - dragStartPosition.y;
+
+            const sensitivity = 0.005 * (initialAvatarScale.x / 3.75); // Adjust sensitivity based on model scale
+            const scaleSensitivity = 0.002 * (initialAvatarScale.x / 3.75);
+
+            if (event.shiftKey) { // Squish/Stretch
+                const scaleX = initialModelScaleOnDrag.x + deltaX * scaleSensitivity;
+                const scaleY = initialModelScaleOnDrag.y - deltaY * scaleSensitivity;
+                const scaleZ = initialModelScaleOnDrag.z * (1 / ((scaleX / initialModelScaleOnDrag.x + scaleY / initialModelScaleOnDrag.y) / 2));
+                avatarHead.scale.set(scaleX, scaleY, scaleZ);
+
+            } else if (event.ctrlKey || event.metaKey) { // Pinch/Zoom (uniform scale)
+                const scaleFactor = 1 + (deltaX - deltaY) * scaleSensitivity;
+                avatarHead.scale.copy(initialModelScaleOnDrag).multiplyScalar(scaleFactor);
+
+            } else { // Pull/Translate
+                avatarHead.position.x = initialModelPositionOnDrag.x + deltaX * sensitivity;
+                avatarHead.position.y = initialModelPositionOnDrag.y - deltaY * sensitivity;
+
+                // Also update target rotations for mouse control so it doesn't jump when re-enabled
+                targetRotationX = avatarHead.rotation.x;
+                targetRotationY = avatarHead.rotation.y;
+            }
+        }
+
+        function onWindowMouseUp(event) {
+            if (!isDragging) return;
+
+            isDragging = false;
+
+            // Animate back to initial position and scale
+            new TWEEN.Tween(avatarHead.position)
+                .to(initialAvatarPosition, 700)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .onComplete(() => {
+                    mouseControlEnabled = true; // Re-enable regular rotation AND idle movement
+                    // Ensure rotation targets match current head rotation to avoid jump
+                    targetRotationX = avatarHead.rotation.x;
+                    targetRotationY = avatarHead.rotation.y;
+                    setNewIdleTargets(); // Reset idle movement targets for a fresh start
+                })
+                .start();
+
+            new TWEEN.Tween(avatarHead.scale)
+                .to(initialAvatarScale, 700)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .start();
+        }
+
+
+        // --- Avatar Animation Functions (for Random Action button) ---
+        function triggerAvatarAnimation(type) {
+            if (!avatarHead) return;
+
+            // Stop any direct mouse manipulation and disable regular mouse control AND idle movement
+            TWEEN.removeAll(); // Stop any previous tweens
+            mouseControlEnabled = false;
+            isDragging = false; // Ensure dragging flag is reset
+            activeButtonTweenCount = 0; // Reset count as we're starting a new interaction
+
+            const animationDuration = 250;
+            const resetDuration = 600;
+            const pullAmount = 6.0; // Base pull amount
+            const pullRotation = Math.PI / 18; // ~10 degrees rotation for pull
+
+            const currentPos = new THREE.Vector3().copy(avatarHead.position);
+            const currentRot = new THREE.Euler().copy(avatarHead.rotation);
+            const currentScale = new THREE.Vector3().copy(avatarHead.scale);
+
+            let targetPos = new THREE.Vector3().copy(currentPos);
+            let targetRot = new THREE.Euler().copy(currentRot);
+            let targetScale = new THREE.Vector3().copy(currentScale);
+
+            let tweensToRun = []; // Collect tweens to manage their completion
+
+            let shouldTweenPosition = false;
+            let shouldTweenRotation = false;
+            let shouldTweenScale = false;
+
+            switch (type) {
+                case 'pullLeft':
+                    targetPos.x -= pullAmount;
+                    targetRot.y -= pullRotation;
+                    shouldTweenPosition = true;
+                    shouldTweenRotation = true;
+                    break;
+                case 'pullRight':
+                    targetPos.x += pullAmount;
+                    targetRot.y += pullRotation;
+                    shouldTweenPosition = true;
+                    shouldTweenRotation = true;
+                    break;
+                case 'pullUp':
+                    targetPos.y += pullAmount;
+                    targetRot.x += pullRotation;
+                    shouldTweenPosition = true;
+                    shouldTweenRotation = true;
+                    break;
+                case 'pullDown':
+                    targetPos.y -= pullAmount;
+                    targetRot.x -= pullRotation;
+                    shouldTweenPosition = true;
+                    shouldTweenRotation = true;
+                    break;
+                case 'squish':
+                    targetScale.x = initialAvatarScale.x * 1.1;
+                    targetScale.y = initialAvatarScale.y * 0.9;
+                    targetScale.z = initialAvatarScale.z * 1.1;
+                    targetPos.y = initialAvatarPosition.y - (pullAmount * 0.2);
+                    shouldTweenScale = true;
+                    shouldTweenPosition = true;
+                    break;
+                case 'stretch':
+                    targetScale.x = initialAvatarScale.x * 0.9;
+                    targetScale.y = initialAvatarScale.y * 1.1;
+                    targetScale.z = initialAvatarScale.z * 0.9;
+                    targetPos.y = initialAvatarPosition.y + (pullAmount * 0.2);
+                    shouldTweenScale = true;
+                    shouldTweenPosition = true;
+                    break;
+                case 'randomWobble':
+                    targetRot.x = currentRot.x + (Math.random() - 0.5) * Math.PI / 1.5;
+                    targetRot.y = currentRot.y + (Math.random() - 0.5) * Math.PI / 1.5;
+                    targetRot.z = currentRot.z + (Math.random() - 0.5) * Math.PI / 3;
+                    shouldTweenRotation = true;
+                    break;
+                case 'randomZoom':
+                    shouldTweenScale = true;
+                    const zoomFactor = 0.2 + Math.random() * 1.8; // Range: 0.2 to 2.0
+                    targetScale.x = initialAvatarScale.x * zoomFactor;
+                    targetScale.y = initialAvatarScale.y * zoomFactor;
+                    targetScale.z = initialAvatarScale.z * zoomFactor;
+                    break;
+                case 'randomTwist':
+                    targetRot.z = currentRot.z + (Math.random() - 0.5) * Math.PI * 4;
+                    shouldTweenRotation = true;
+                    break;
+                default:
+                    console.warn(`Unknown animation type: ${type}`);
+                    return;
+            }
+
+            if (shouldTweenPosition) {
+                const posTween = new TWEEN.Tween(avatarHead.position)
+                    .to(targetPos, animationDuration)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .chain(
+                        new TWEEN.Tween(avatarHead.position)
+                            .to(initialAvatarPosition, resetDuration) // Always return to initial position
+                            .easing(TWEEN.Easing.Elastic.Out)
+                    );
+                tweensToRun.push(posTween);
+            }
+
+            if (shouldTweenRotation) {
+                const rotTween = new TWEEN.Tween(avatarHead.rotation)
+                    .to(targetRot, animationDuration)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .chain(
+                        new TWEEN.Tween(avatarHead.rotation)
+                            .to(initialAvatarRotation, resetDuration) // Always return to initial rotation
+                            .easing(TWEEN.Easing.Elastic.Out)
+                    );
+                tweensToRun.push(rotTween);
+            }
+
+            if (shouldTweenScale) {
+                const scaleTween = new TWEEN.Tween(avatarHead.scale)
+                    .to(targetScale, animationDuration)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .chain(
+                        new TWEEN.Tween(avatarHead.scale)
+                            .to(initialAvatarScale, resetDuration * 1.5)
+                            .easing(TWEEN.Easing.Elastic.Out)
+                    );
+                tweensToRun.push(scaleTween);
+            }
+
+            if (tweensToRun.length > 0) {
+                activeButtonTweenCount = tweensToRun.length;
+
+                tweensToRun.forEach(tween => {
+                    tween.onComplete(() => {
+                        activeButtonTweenCount--;
+                        if (activeButtonTweenCount === 0) {
+                            mouseControlEnabled = true;
+                            // Ensure rotation targets match current head rotation to avoid jump when mouse control re-enables
+                            targetRotationX = avatarHead.rotation.x;
+                            targetRotationY = avatarHead.rotation.y;
+                            setNewIdleTargets(); // Reset idle movement targets for a fresh start
+                        }
+                    }).start();
+                });
+            }
+        }
+
+        function resetView() {
+            if (!avatarHead) return;
+
+            // Stop all current TWEEN animations immediately
+            TWEEN.removeAll();
+
+            // Reset mouse control and counters
+            mouseControlEnabled = true;
+            isDragging = false;
+            activeButtonTweenCount = 0;
+
+            // Reset target rotations for mouse control
+            targetRotationX = initialAvatarRotation.x;
+            targetRotationY = initialAvatarRotation.y;
+
+            // Animate back to initial state
+            new TWEEN.Tween(avatarHead.position)
+                .to(initialAvatarPosition, 700)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .start();
+
+            new TWEEN.Tween(avatarHead.rotation)
+                .to(initialAvatarRotation, 700)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .start();
+
+            new TWEEN.Tween(avatarHead.scale)
+                .to(initialAvatarScale, 700)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .start();
+
+            setNewIdleTargets(); // Reset idle movement targets
+        }
+
+        // --- Idle Movement Functions ---
+        function setNewIdleTargets() {
+            // Generate new random targets within a small range
+            idleTargetPosition.set(
+                initialAvatarPosition.x + (Math.random() - 0.5) * idleMovementRangePosition,
+                initialAvatarPosition.y + (Math.random() - 0.5) * idleMovementRangePosition,
+                initialAvatarPosition.z + (Math.random() - 0.5) * idleMovementRangePosition
+            );
+
+            idleTargetRotation.set(
+                initialAvatarRotation.x + (Math.random() - 0.5) * idleMovementRangeRotation,
+                initialAvatarRotation.y + (Math.random() - 0.5) * idleMovementRangeRotation,
+                initialAvatarRotation.z + (Math.random() - 0.5) * idleMovementRangeRotation
+            );
+
+            lastIdleTargetChangeTime = performance.now();
+        }
+
+        // --- Random Action Selector ---
+        const randomActionTypes = [
+            'pullLeft', 'pullRight', 'pullUp', 'pullDown',
+            'squish', 'stretch',
+            'randomWobble',
+            'randomZoom',
+            'randomTwist'
+        ];
+
+        function triggerRandomAction() {
+            const randomIndex = Math.floor(Math.random() * randomActionTypes.length);
+            const randomType = randomActionTypes[randomIndex];
+            console.log(`Triggering random action: ${randomType}`);
+            triggerAvatarAnimation(randomType);
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            TWEEN.update(); // Update all active tweens
+
+            const currentTime = performance.now();
+
+            // Apply idle movement only if mouse control is enabled and not dragging
+            if (avatarHead && mouseControlEnabled && !isDragging) {
+                // Smoothly move towards idle targets
+                avatarHead.position.lerp(idleTargetPosition, 0.01); // Increased lerp factor for faster idle movement
+                avatarHead.rotation.x = THREE.MathUtils.lerp(avatarHead.rotation.x, idleTargetRotation.x, 0.01); // Increased lerp factor
+                avatarHead.rotation.y = THREE.MathUtils.lerp(avatarHead.rotation.y, idleTargetRotation.y, 0.01); // Increased lerp factor
+                avatarHead.rotation.z = THREE.MathUtils.lerp(avatarHead.rotation.z, idleTargetRotation.z, 0.01); // Increased lerp factor
+
+                // Check if it's time to generate a new idle target
+                if (currentTime - lastIdleTargetChangeTime > idleTargetChangeInterval) {
+                    setNewIdleTargets();
+                }
+            }
+            // Regular mouse-based rotation (still uses targetRotationX/Y)
+            // This happens even when idle movement is on, allowing mouse to override idle
+            if (avatarHead && mouseControlEnabled && !isDragging) {
+                avatarHead.rotation.x += (targetRotationX - avatarHead.rotation.x) * rotationSmoothness;
+                avatarHead.rotation.y += (targetRotationY - avatarHead.rotation.y) * rotationSmoothness;
+            }
+
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
