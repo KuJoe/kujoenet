@@ -53,7 +53,7 @@ async function fetchRssFeed() {
 						<div class="rss-description">
 							${descriptionCdata || '<p>No description available.</p>'}
 						</div>
-						${link ? `<a href="${link}" target="_blank" class="btn btn-outline-game btn-sm mt-3">View App</a>` : ''}
+						${link ? `<p class="text-center"><a href="${link}" target="_blank" class="btn btn-outline-game btn-sm mt-3 text-center">View App</a></p>` : ''}
 					</div>
 				`;
 				feedContainer.appendChild(itemDiv);
