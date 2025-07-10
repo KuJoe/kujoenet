@@ -228,3 +228,47 @@ h1, h2, h3, h4, h5, .navbar-brand {
     border-top: 2px solid #00f2fe;
     box-shadow: inset 0 5px 15px rgba(0, 242, 254, 0.1);
 }
+
+/* Additional styles specific to this RSS display if needed */
+.rss-item {
+	background-color: #0f0f1a; /* Dark card background */
+	border: 1px solid #00f2fe; /* Neon border */
+	border-radius: 12px;
+	box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+	padding: 1.5rem;
+	margin-bottom: 1.5rem;
+	color: #e0e0e0;
+}
+.rss-item h3 {
+	color: #00f2fe;
+	font-family: 'Orbitron', sans-serif;
+	text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+	margin-bottom: 0.75rem;
+}
+.rss-item img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+	margin-bottom: 1rem;
+	border: 1px solid #00f2fe;
+	box-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
+}
+.rss-item a {
+	color: #00aaff;
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+.rss-item a:hover {
+	color: #00f2fe;
+	text-decoration: underline;
+}
+.rss-header {
+	text-align: center;
+	margin-bottom: 3rem;
+}
+.rss-header h1 {
+	font-size: 2.5rem;
+}
+.rss-header p {
+	color: #c0c0c0;
+}
