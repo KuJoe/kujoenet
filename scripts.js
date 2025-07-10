@@ -39,26 +39,34 @@ async function fetchRssFeed() {
 		if (items.length === 0) {
 			feedContainer.innerHTML = '<p class="text-center text-light">No featured apps found at the moment.</p>';
 		} else {
-			items.forEach(item => {
-				const title = item.querySelector('title')?.textContent;
-				const link = item.querySelector('link')?.textContent;
-				// RSS description can contain CDATA with HTML, so we'll append it directly
-				const descriptionCdata = item.querySelector('description')?.textContent;
+            items.forEach(item => {
+                const title = item.querySelector('title')?.textContent;
+                const link = item.querySelector('link')?.textContent;
+                // RSS description can contain CDATA with HTML, so we'll append it directly
+                const descriptionCdata = item.querySelector('description')?.textContent;
 
-				const itemDiv = document.createElement('div');
-				itemDiv.className = 'col-12 col-md-6 col-lg-4 mb-4'; // Responsive columns
-				itemDiv.innerHTML = `
-					<div class="rss-item h-100">
-						<h3>${title || 'No Title'}</h3>
-						<div class="rss-description">
-							${descriptionCdata || '<p>No description available.</p>'}
-						</div>
-						${link ? `<p class="text-center"><a href="${link}" target="_blank" class="btn btn-outline-game btn-sm mt-3 text-center">View App</a></p>` : ''}
-					</div>
-				`;
-				feedContainer.appendChild(itemDiv);
-			});
-		}
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'col-12 col-md-6 col-lg-4 mb-4'; // Responsive columns
+                itemDiv.innerHTML = `
+                    <div class="rss-item h-100">
+                        <h3>${title || 'No Title'}</h3>
+                        <div class="rss-description">
+                            ${descriptionCdata || '<p>No description available.</p>'}
+                        </div>
+                    </div>
+                `;
+                // Make the entire rss-item div clickable
+                const rssItemContent = itemDiv.querySelector('.rss-item');
+                if (rssItemContent && link) {
+                    rssItemContent.style.cursor = 'pointer'; // Add pointer cursor to indicate clickability
+                    rssItemContent.addEventListener('click', () => {
+                        window.open(link, '_blank'); // Open link in new tab
+                    });
+                }
+
+                if (feedContainer) feedContainer.appendChild(itemDiv);
+            });
+        }
 	} catch (error) {
 		console.error('Error fetching or parsing RSS feed:', error);
 		errorMessage.classList.remove('d-none');
