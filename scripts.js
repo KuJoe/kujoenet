@@ -25,7 +25,7 @@ async function fetchRssFeed() {
 
 		const channel = xmlDoc.querySelector('channel');
 		if (channel) {
-			feedTitleElement.textContent = channel.querySelector('title')?.textContent || 'Featured Apps RSS Feed';
+			feedTitleElement.textContent = channel.querySelector('title')?.textContent || '//Featured_Apps';
 			feedDescriptionElement.textContent = channel.querySelector('description')?.textContent || '';
 			const lastBuildDate = channel.querySelector('lastBuildDate')?.textContent;
 			if (lastBuildDate) {
@@ -62,7 +62,7 @@ async function fetchRssFeed() {
 	} catch (error) {
 		console.error('Error fetching or parsing RSS feed:', error);
 		errorMessage.classList.remove('d-none');
-		feedTitleElement.textContent = 'Error Loading Feed';
+		feedTitleElement.textContent = '//Error_Loading_Feed';
 		feedDescriptionElement.textContent = 'Could not retrieve featured apps.';
 		feedLastBuildDateElement.textContent = 'N/A';
 	} finally {
