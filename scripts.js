@@ -7,7 +7,6 @@ async function fetchRssFeed() {
 	const errorMessage = document.getElementById('errorMessage');
 	const feedTitleElement = document.getElementById('feedTitle');
 	const feedDescriptionElement = document.getElementById('feedDescription');
-	const feedLastBuildDateElement = document.getElementById('feedLastBuildDate');
 
 	loadingMessage.classList.remove('d-none');
 	errorMessage.classList.add('d-none');
@@ -27,12 +26,6 @@ async function fetchRssFeed() {
 		if (channel) {
 			feedTitleElement.textContent = channel.querySelector('title')?.textContent || '//Featured_Apps';
 			feedDescriptionElement.textContent = channel.querySelector('description')?.textContent || '';
-			const lastBuildDate = channel.querySelector('lastBuildDate')?.textContent;
-			if (lastBuildDate) {
-				feedLastBuildDateElement.textContent = new Date(lastBuildDate).toLocaleString();
-			} else {
-				feedLastBuildDateElement.textContent = 'N/A';
-			}
 		}
 
 		const items = xmlDoc.querySelectorAll('item');
@@ -72,7 +65,6 @@ async function fetchRssFeed() {
 		errorMessage.classList.remove('d-none');
 		feedTitleElement.textContent = '//Error_Loading_Feed';
 		feedDescriptionElement.textContent = 'Could not retrieve featured apps.';
-		feedLastBuildDateElement.textContent = 'N/A';
 	} finally {
 		loadingMessage.classList.add('d-none');
 	}
