@@ -272,3 +272,15 @@ h1, h2, h3, h4, h5, .navbar-brand {
 .rss-header p {
 	color: #c0c0c0;
 }
+
+/* Orbitron font for all buttons */
+button, .btn, .btn-game, .btn-outline-game, .category-btn, .btn-close, a.btn {
+    font-family: 'Orbitron', 'Inter', Arial, sans-serif !important;
+    text-align: center !important;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+button svg, a.btn svg {
+    display: block;
+    margin: 0 auto;
+}
